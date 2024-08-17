@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "python-gardenlinux-cli"
+version = "0.1.0"
+description = ""
+authors = ["Vincent Riesop <v.riesop@sap.com>"]
+readme = "README.md"
+packages = [
+     { include = "python_gardenlinux_cli", from = "src" },
+]
+[tool.poetry.scripts]
+cli = "python_gardenlinux_cli.cli:cli"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+python-gardenlinux-lib = {git = "https://github.com/gardenlinux/python-gardenlinux-lib"}
+oras = { git  = "https://github.com/oras-project/oras-py.git", rev="caf8db5b279382335fbb1f6d7402ed9b73618d37" }
+pytest = "^8.3.2"
+click = "^8.1.7"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
