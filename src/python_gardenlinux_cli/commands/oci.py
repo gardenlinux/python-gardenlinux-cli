@@ -4,7 +4,7 @@ import os
 import click
 import oras.client
 import oras.container
-from oras.container import Container as OrasContainer
+from python_gardenlinux_lib.oras.registry import GlociRegistry
 
 from typing import Optional
 
