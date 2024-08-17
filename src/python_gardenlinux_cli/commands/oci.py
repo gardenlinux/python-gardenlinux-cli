@@ -235,4 +235,3 @@ def inspect_index(ctx, container_name, version, public_key):
         container_name, insecure=ctx.obj["insecure"], public_key=public_key
     )
     print(json.dumps(registry.get_index(), indent=4))
-
