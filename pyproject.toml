@@ -8,7 +8,7 @@ packages = [
      { include = "python_gardenlinux_cli", from = "src" },
 ]
 [tool.poetry.scripts]
-cli = "python_gardenlinux_cli.cli:cli"
+glcli = "python_gardenlinux_cli.glcli:glcli"
 
 [tool.poetry.dependencies]
 python = "^3.12"

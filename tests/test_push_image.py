@@ -1,6 +1,6 @@
 import pytest
 from click.testing import CliRunner
-from python_gardenlinux_cli.cli import cli
+from python_gardenlinux_cli.glcli import glcli
 from python_gardenlinux_cli.commands.oci import setup_registry
 
 CONTAINER_NAME_ZOT_EXAMPLE = "127.0.0.1:18081/examplecontainer2"
@@ -41,7 +41,7 @@ def test_push_example(info_yaml_path, version, cname, arch):
 def test_push_example_cli(info_yaml_path, version, cname, arch):
     runner = CliRunner()
     result = runner.invoke(
-        cli,
+        glcli,
         [
             "oci",
             "push",
