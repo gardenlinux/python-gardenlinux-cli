@@ -10,7 +10,6 @@ This is the command line interface for the [python-gardenlinux-lib](https://gith
     - more
 - Garden Version - 🔴 0% done
 - Apt Repository parsing - 🔴 20% done
-    - 
  
 # Example Usage
 ```
