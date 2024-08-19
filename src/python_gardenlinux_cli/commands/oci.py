@@ -4,7 +4,7 @@ import os
 import click
 import oras.client
 import oras.container
-from python_gardenlinux_lib.oras.registry import GlociRegistry
+from python_gardenlinux_lib.oras.registry import GlociRegistry, setup_registry
 
 from typing import Optional
 
@@ -21,27 +21,6 @@ def oci(ctx, insecure):
     ctx.obj["insecure"] = insecure
 
 
-def setup_registry(
-    container_name: str,
-    private_key: Optional[str] = None,
-    insecure: bool = False,
-    public_key: Optional[str] = None,
-):
-    username = os.getenv("GLOCI_REGISTRY_USERNAME")
-    token = os.getenv("GLOCI_REGISTRY_TOKEN")
-    if username is None:
-        click.echo("No username")
-        exit(-1)
-    if token is None:
-        click.echo("No token")
-        exit(-1)
-    return GlociRegistry(
-        container_name,
-        token,
-        insecure=insecure,
-        private_key=private_key,
-        public_key=public_key,
-    )
 
 
 @oci.command()
