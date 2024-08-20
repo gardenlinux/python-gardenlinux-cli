@@ -10,6 +10,12 @@ packages = [
 [tool.poetry.scripts]
 glcli = "python_gardenlinux_cli.glcli:glcli"
 
+[tool.pytest.ini_options]
+pythonpath = [
+  "src"
+]
+norecursedirs = "test-data"
+
 [tool.poetry.dependencies]
 python = "^3.12"
 python-gardenlinux-lib = {git = "https://github.com/gardenlinux/python-gardenlinux-lib", rev="main"}

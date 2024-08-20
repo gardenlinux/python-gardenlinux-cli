@@ -3,42 +3,28 @@ from click.testing import CliRunner
 from python_gardenlinux_cli.glcli import glcli
 from python_gardenlinux_cli.commands.oci import setup_registry
 
-CONTAINER_NAME_ZOT_EXAMPLE = "127.0.0.1:18081/examplecontainer2"
-
-
-@pytest.mark.usefixtures("zot_session")
-@pytest.mark.parametrize(
-    "info_yaml_path, version, cname, arch",
-    [
-        ("example-data/info_1.yaml", "today", "yolo-example_dev", "arm64"),
-        ("example-data/info_1.yaml", "today", "yolo-example_dev", "amd64"),
-        ("example-data/info_2.yaml", "today", "yolo-example_dev", "arm64"),
-        ("example-data/info_2.yaml", "today", "yolo-example_dev", "amd64"),
-    ],
-)
-def test_push_example(info_yaml_path, version, cname, arch):
-
-    container_name = f"{CONTAINER_NAME_ZOT_EXAMPLE}:{version}"
-    registry = setup_registry(
-        container_name,
-        insecure=True,
-        private_key="cert/oci-sign.key",
-        public_key="cert/oci-sign.crt",
-    )
-    registry.push_image_manifest(arch, cname, version, info_yaml_path)
-
+CONTAINER_NAME_ZOT_EXAMPLE = "127.0.0.1:18081/gardenlinux-example"
+GARDENLINUX_ROOT_DIR_EXAMPLE = "test-data/gardenlinux/"
 
 @pytest.mark.usefixtures("zot_session")
 @pytest.mark.parametrize(
-    "info_yaml_path, version, cname, arch",
+    "version, cname, arch",
     [
-        ("example-data/info_1.yaml", "today", "yolo-example_dev", "arm64"),
-        ("example-data/info_1.yaml", "today", "yolo-example_dev", "amd64"),
-        ("example-data/info_2.yaml", "today", "yolo-example_dev", "arm64"),
-        ("example-data/info_2.yaml", "today", "yolo-example_dev", "amd64"),
+        ("today", "aws-gardener_prod", "arm64"),
+        ("today", "aws-gardener_prod", "amd64"),
+        ("today", "gcp-gardener_prod", "arm64"),
+        ("today", "gcp-gardener_prod", "amd64"),
+        ("today", "azure-gardener_prod", "arm64"),
+        ("today", "azure-gardener_prod", "amd64"),
+        ("today", "openstack-gardener_prod", "arm64"),
+        ("today", "openstack-gardener_prod", "amd64"),
+        ("today", "openstackbaremetal-gardener_prod", "arm64"),
+        ("today", "openstackbaremetal-gardener_prod", "amd64"),
+        ("today", "metal-kvm_dev", "arm64"),
+        ("today", "metal-kvm_dev", "amd64"),
     ],
 )
-def test_push_example_cli(info_yaml_path, version, cname, arch):
+def test_push_example_cli(version, cname, arch):
     runner = CliRunner()
     result = runner.invoke(
         glcli,
@@ -53,8 +39,8 @@ def test_push_example_cli(info_yaml_path, version, cname, arch):
             arch,
             "--cname",
             cname,
-            "--info_yaml",
-            info_yaml_path,
+            "--gardenlinux_root",
+            GARDENLINUX_ROOT_DIR_EXAMPLE,
         ],
         catch_exceptions=False,
     )

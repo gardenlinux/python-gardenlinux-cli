@@ -42,10 +42,22 @@ def oci(ctx, insecure):
 )
 @click.option("--version", required=True, type=click.Path(), help="Version of Image")
 @click.option(
-    "--info_yaml",
+    "--gardenlinux_root",
     required=True,
     type=click.Path(),
-    help="info.yaml file of the Garden Linux flavor. The info.yaml specifies the data (layers)",
+    help="path to root directory of Garden Linux sources. Required for calculating all features based on cname",
+)
+@click.option(
+    "--gardenlinux_root",
+    required=True,
+    type=click.Path(),
+    help="path to root directory of Garden Linux sources. Required for calculating all features based on cname",
+)
+@click.option(
+    "--build_output",
+    required=False,
+    type=click.Path(),
+    help="path to .build directory of build targets.",
 )
 @click.option(
     "--private_key",
@@ -70,10 +82,14 @@ def push(
     architecture,
     cname,
     version,
-    info_yaml,
+    gardenlinux_root,
+    build_output,
     private_key,
     public_key,
 ):
+    if not build_output:
+        build_output = f"{gardenlinux_root}/.build"
+
     container_name = f"{container_name}:{version}"
     registry = setup_registry(
         container_name,
@@ -81,7 +97,7 @@ def push(
         private_key=private_key,
         public_key=public_key,
     )
-    registry.push_image_manifest(architecture, cname, version, info_yaml)
+    registry.push_image_manifest(architecture, cname, version, gardenlinux_root, build_output)
     click.echo(f"Pushed {container_name}")
 
 
