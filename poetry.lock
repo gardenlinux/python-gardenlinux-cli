@@ -666,7 +666,7 @@ sphinx-rtd-theme = "^2.0.0"
 type = "git"
 url = "https://github.com/gardenlinux/python-gardenlinux-lib"
 reference = "main"
-resolved_reference = "940718ca7cd678a6aa5c2af769efcd0d3a6324de"
+resolved_reference = "f5eb8ec02c9cf2c9c6bef0a15554205a6ab8a68f"
 
 [[package]]
 name = "pyyaml"
