@@ -1,16 +1,12 @@
 # my_project/commands/image.py
 import json
-import shutil
-import tarfile
-import tempfile
-import os
+
 import click
 import oras.client
 import oras.container
-from python_gardenlinux_lib.oras.registry import GlociRegistry, setup_registry
 from python_gardenlinux_lib.features import parse_features
-
-from typing import Optional
+from python_gardenlinux_lib.oras.crypto import KMSSigner, LocalSigner
+from python_gardenlinux_lib.oras.registry import GlociRegistry
 
 
 @click.group()
@@ -77,6 +73,12 @@ def oci(ctx, insecure):
     default="cert/oci-sign.crt",
     show_default=True,
 )
+@click.option(
+    "--kms_arn",
+    required=False,
+    help="AWS KMS ARN to use for signing and verification, if --public_key and --private-key are set too, "
+    "KMS has precedence",
+)
 @click.pass_context
 def push(
     ctx,
@@ -88,6 +90,7 @@ def push(
     build_output,
     private_key,
     public_key,
+    kms_arn,
 ):
     """push local build artifacts to a registry"""
     if not build_output:
@@ -97,12 +100,19 @@ def push(
     oci_metadata = parse_features.get_oci_metadata(
         cname, version, architecture, gardenlinux_root
     )
-    registry = setup_registry(
-        container_name,
-        insecure=ctx.obj["insecure"],
-        private_key=private_key,
-        public_key=public_key,
+    signer = None
+    if kms_arn:
+        print("using KMS")
+        signer = KMSSigner(kms_arn)
+    else:
+        print("using local certs", public_key, private_key)
+        signer = LocalSigner(
+            private_key_file_path=private_key, public_key_file_path=public_key
+        )
+    registry = GlociRegistry(
+        container_name=container_name, signer=signer, insecure=ctx.obj["insecure"]
     )
+    registry.push_from_tar(architecture, version, cname, tar)
     registry.push_image_manifest(
         architecture, cname, version, build_output, oci_metadata
     )
@@ -143,6 +153,12 @@ def push(
     default="cert/oci-sign.crt",
     show_default=True,
 )
+@click.option(
+    "--kms_arn",
+    required=False,
+    help="AWS KMS ARN to use for signing and verification, if --public_key and --private-key are set too, "
+    "KMS has precedence",
+)
 @click.option("--tar", required=True, help="path to the build-tarball")
 @click.pass_context
 def push_from_tarball(
@@ -154,14 +170,21 @@ def push_from_tarball(
     tar,
     private_key,
     public_key,
+    kms_arn,
 ):
     """push artifacts from a tarball to a registry"""
     container_name = f"{container_name}:{version}"
-    registry = setup_registry(
-        container_name,
-        insecure=ctx.obj["insecure"],
-        private_key=private_key,
-        public_key=public_key,
+    signer = None
+    if kms_arn:
+        print("using KMS")
+        signer = KMSSigner(kms_arn)
+    else:
+        print("using local certs", public_key, private_key)
+        signer = LocalSigner(
+            private_key_file_path=private_key, public_key_file_path=public_key
+        )
+    registry = GlociRegistry(
+        container_name=container_name, signer=signer, insecure=ctx.obj["insecure"]
     )
     registry.push_from_tar(architecture, version, cname, tar)
 
