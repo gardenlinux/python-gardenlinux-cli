@@ -5,7 +5,6 @@ import click
 import oras.client
 import oras.container
 from python_gardenlinux_lib.features import parse_features
-from python_gardenlinux_lib.oras.crypto import KMSSigner, LocalSigner
 from python_gardenlinux_lib.oras.registry import GlociRegistry
 
 
@@ -58,26 +57,9 @@ def oci(ctx, insecure):
     help="path to .build directory of build targets.",
 )
 @click.option(
-    "--private_key",
+    "--cosign_file",
     required=False,
-    type=click.Path(),
-    help="Path to private key to use for signing",
-    default="cert/oci-sign.key",
-    show_default=True,
-)
-@click.option(
-    "--public_key",
-    required=False,
-    type=click.Path(),
-    help="Path to public key to use for verification of signatures",
-    default="cert/oci-sign.crt",
-    show_default=True,
-)
-@click.option(
-    "--kms_arn",
-    required=False,
-    help="AWS KMS ARN to use for signing and verification, if --public_key and --private-key are set too, "
-    "KMS has precedence",
+    help="A file where the pushed manifests digests is written to. The content can be used by an external tool (e.g. cosign) to sign the manifests contents",
 )
 @click.pass_context
 def push(
@@ -88,9 +70,7 @@ def push(
     version,
     gardenlinux_root,
     build_output,
-    private_key,
-    public_key,
-    kms_arn,
+    cosign_file,
 ):
     """push local build artifacts to a registry"""
     if not build_output:
@@ -100,22 +80,16 @@ def push(
     oci_metadata = parse_features.get_oci_metadata(
         cname, version, architecture, gardenlinux_root
     )
-    signer = None
-    if kms_arn:
-        print("using KMS")
-        signer = KMSSigner(kms_arn)
-    else:
-        print("using local certs", public_key, private_key)
-        signer = LocalSigner(
-            private_key_file_path=private_key, public_key_file_path=public_key
-        )
+
+    features = parse_features.get_features(cname, gardenlinux_root)
     registry = GlociRegistry(
-        container_name=container_name, signer=signer, insecure=ctx.obj["insecure"]
+        container_name=container_name, insecure=ctx.obj["insecure"]
     )
-    registry.push_from_tar(architecture, version, cname, tar)
-    registry.push_image_manifest(
-        architecture, cname, version, build_output, oci_metadata
+    digest = registry.push_image_manifest(
+        architecture, cname, version, build_output, oci_metadata, feature_set=features
     )
+    if cosign_file:
+        print(digest, file=open(cosign_file, 'w'))
     click.echo(f"Pushed {container_name}")
 
 
@@ -137,29 +111,12 @@ def push(
     "--cname", required=True, type=click.Path(), help="Canonical Name of Image"
 )
 @click.option("--version", required=True, type=click.Path(), help="Version of Image")
-@click.option(
-    "--private_key",
-    required=False,
-    type=click.Path(),
-    help="Path to private key to use for signing",
-    default="cert/oci-sign.key",
-    show_default=True,
-)
-@click.option(
-    "--public_key",
-    required=False,
-    type=click.Path(),
-    help="Path to public key to use for verification of signatures",
-    default="cert/oci-sign.crt",
-    show_default=True,
-)
-@click.option(
-    "--kms_arn",
-    required=False,
-    help="AWS KMS ARN to use for signing and verification, if --public_key and --private-key are set too, "
-    "KMS has precedence",
-)
 @click.option("--tar", required=True, help="path to the build-tarball")
+@click.option(
+    "--cosign_file",
+    required=False,
+    help="A file where the pushed manifests digests is written to. The content can be used by an external tool (e.g. cosign) to sign the manifests contents",
+)
 @click.pass_context
 def push_from_tarball(
     ctx,
@@ -168,25 +125,16 @@ def push_from_tarball(
     cname,
     version,
     tar,
-    private_key,
-    public_key,
-    kms_arn,
+    cosign_file,
 ):
     """push artifacts from a tarball to a registry"""
     container_name = f"{container_name}:{version}"
-    signer = None
-    if kms_arn:
-        print("using KMS")
-        signer = KMSSigner(kms_arn)
-    else:
-        print("using local certs", public_key, private_key)
-        signer = LocalSigner(
-            private_key_file_path=private_key, public_key_file_path=public_key
-        )
     registry = GlociRegistry(
-        container_name=container_name, signer=signer, insecure=ctx.obj["insecure"]
+        container_name=container_name, insecure=ctx.obj["insecure"]
     )
-    registry.push_from_tar(architecture, version, cname, tar)
+    digest = registry.push_from_tar(architecture, version, cname, tar)
+    if cosign_file:
+        print(digest, file=open(cosign_file, 'w'))
 
 
 @oci.command()
