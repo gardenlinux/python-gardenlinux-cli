@@ -685,7 +685,7 @@ sphinx-rtd-theme = "^2.0.0"
 [package.source]
 type = "git"
 url = "https://github.com/gardenlinux/python-gardenlinux-lib"
-reference = "main"
+reference = "0.4.0"
 resolved_reference = "9894102c07955ac709237b757dd566bda5496bfe"
 
 [[package]]
@@ -1101,4 +1101,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "fdf93433e75c5ba63a14d133d6e9a0c2a3fcbb8bf29735c4bc75339dc6ce694b"
+content-hash = "3821e1b9705a79b3db307b69a0dcb66c2e3b94713ec65587df6286d56a2d798c"
