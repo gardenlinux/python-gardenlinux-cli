@@ -1,5 +1,6 @@
 # my_project/commands/image.py
 import json
+import os
 
 import click
 import oras.client
@@ -89,7 +90,7 @@ def push(
         architecture, cname, version, build_output, oci_metadata, feature_set=features
     )
     if cosign_file:
-        print(digest, file=open(cosign_file, 'w'))
+        print(digest, file=open(cosign_file, "w"))
     click.echo(f"Pushed {container_name}")
 
 
@@ -130,11 +131,13 @@ def push_from_tarball(
     """push artifacts from a tarball to a registry"""
     container_name = f"{container_name}:{version}"
     registry = GlociRegistry(
-        container_name=container_name, insecure=ctx.obj["insecure"]
+        container_name=container_name,
+        insecure=ctx.obj["insecure"],
+        token=os.getenv("GLOCI_REGISTRY_TOKEN"),
     )
     digest = registry.push_from_tar(architecture, version, cname, tar)
     if cosign_file:
-        print(digest, file=open(cosign_file, 'w'))
+        print(digest, file=open(cosign_file, "w"))
 
 
 @oci.command()
