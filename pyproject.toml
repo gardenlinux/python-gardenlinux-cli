@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python-gardenlinux-cli"
-version = "0.2.4"
+version = "0.2.5"
 description = ""
 authors = ["Vincent Riesop <v.riesop@sap.com>"]
 readme = "README.md"
