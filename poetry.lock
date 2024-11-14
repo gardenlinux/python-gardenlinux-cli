@@ -663,7 +663,7 @@ cli = ["click (>=5.0)"]
 
 [[package]]
 name = "python-gardenlinux-lib"
-version = "0.4.2"
+version = "0.4.3"
 description = "Contains tools to work with the features directory of gardenlinux, for example deducting dependencies from feature sets or validating cnames"
 optional = false
 python-versions = "^3.10"
@@ -685,8 +685,8 @@ sphinx-rtd-theme = "^2.0.0"
 [package.source]
 type = "git"
 url = "https://github.com/gardenlinux/python-gardenlinux-lib"
-reference = "0.4.3"
-resolved_reference = "76aee79617d3a3ef0fb477121bbf05e1c4c6389f"
+reference = "0.4.4"
+resolved_reference = "72a00cb56ee28f55eb9d716c1263b771fb33bd96"
 
 [[package]]
 name = "pyyaml"
@@ -1088,4 +1088,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "88273e0e79b684e04b34f5d07124031974004b712ced8855f87a6439f20b8409"
+content-hash = "2447dcaeba0848a98c9cb5d4eb7eac17724d849d3c36dbaa080cdf30cb6a72df"

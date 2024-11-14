@@ -18,7 +18,7 @@ norecursedirs = "test-data"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-python-gardenlinux-lib = {git = "https://github.com/gardenlinux/python-gardenlinux-lib", rev="0.4.3"}
+python-gardenlinux-lib = {git = "https://github.com/gardenlinux/python-gardenlinux-lib", rev="0.4.4"}
 oras = { git  = "https://github.com/oras-project/oras-py.git", rev="caf8db5b279382335fbb1f6d7402ed9b73618d37" }
 pytest = "^8.3.2"
 click = "^8.1.7"
