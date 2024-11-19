@@ -685,8 +685,8 @@ sphinx-rtd-theme = "^2.0.0"
 [package.source]
 type = "git"
 url = "https://github.com/gardenlinux/python-gardenlinux-lib"
-reference = "0.4.4"
-resolved_reference = "72a00cb56ee28f55eb9d716c1263b771fb33bd96"
+reference = "0.4.5"
+resolved_reference = "a46bac29bef270e161bf916d37911b6ff852b436"
 
 [[package]]
 name = "pyyaml"
@@ -1088,4 +1088,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "2447dcaeba0848a98c9cb5d4eb7eac17724d849d3c36dbaa080cdf30cb6a72df"
+content-hash = "1f98ac4f8a6bfbb8309a523fd5212bc39161344543063036aa334fab9b7fb918"
