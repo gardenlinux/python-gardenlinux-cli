@@ -139,6 +139,7 @@ def push_from_tarball(
     if cosign_file:
         print(digest, file=open(cosign_file, "w"))
 
+
 @oci.command()
 @click.option(
     "--container",
@@ -165,13 +166,13 @@ def push_from_tarball(
 )
 @click.pass_context
 def push_from_dir(
-        ctx,
-        container_name,
-        architecture,
-        cname,
-        version,
-        dir,
-        cosign_file,
+    ctx,
+    container_name,
+    architecture,
+    cname,
+    version,
+    dir,
+    cosign_file,
 ):
     """push artifacts from a dir to a registry"""
     container_name = f"{container_name}:{version}"
@@ -183,6 +184,7 @@ def push_from_dir(
     digest = registry.push_from_dir(architecture, version, cname, dir)
     if cosign_file:
         print(digest, file=open(cosign_file, "w"))
+
 
 @oci.command()
 @click.option(

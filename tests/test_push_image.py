@@ -5,6 +5,7 @@ from python_gardenlinux_cli.glcli import glcli
 CONTAINER_NAME_ZOT_EXAMPLE = "127.0.0.1:18081/gardenlinux-example"
 GARDENLINUX_ROOT_DIR_EXAMPLE = "test-data/gardenlinux/"
 
+
 @pytest.mark.usefixtures("zot_session")
 @pytest.mark.parametrize(
     "version, cname, arch",
