@@ -133,7 +133,7 @@ class GlociRegistry(Registry):
     def __init__(
         self,
         container_name: str,
-        insecure: bool = False,
+        insecure: bool = True, # somehow needed, according to logs it is still pushed with https
         token: Optional[str] = None,
         config_path: Optional[str] = None,
     ):
