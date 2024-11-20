@@ -91,7 +91,7 @@ def push_manifest(
     default=False,
     help="Use HTTP to communicate with the registry",
 )
-def update_index(container, version, manifest_file,  insecure):
+def update_index(container, version, manifest_file, insecure):
     """push a index entry from a file to an index"""
     container_name = f"{container}:{version}"
     registry = GlociRegistry(
