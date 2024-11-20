@@ -534,7 +534,7 @@ class GlociRegistry(Registry):
             new_index = self.update_index(
                 old_manifest_meta_data["digest"], manifest_index_metadata
             )
-            logger.info("replaced manifest entry")
+            logger.info("Replaced manifest entry")
         else:
             new_index = self.update_index(None, manifest_index_metadata)
             logger.info("Appended manifest entry")
