@@ -1,13 +1,10 @@
 from glob import glob
-from git.objects import commit
 import yaml
 import networkx
 import os
 import re
 import subprocess
 from typing import Optional
-
-from pygments.filter import apply_filters
 
 # It is important that this list is sorted in descending length of the entries
 GL_MEDIA_TYPES = [
