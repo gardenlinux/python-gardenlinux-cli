@@ -87,20 +87,11 @@ def push_manifest(
     help="A file where the index entry is read from.",
 )
 @click.option(
-    "--arch",
-    required=True,
-    type=click.Path(),
-    help="Target Image CPU Architecture",
-)
-@click.option(
-    "--cname", required=True, type=click.Path(), help="Canonical Name of Image"
-)
-@click.option(
     "--insecure",
     default=False,
     help="Use HTTP to communicate with the registry",
 )
-def update_index(container, version, manifest_file, arch, cname, insecure):
+def update_index(container, version, manifest_file,  insecure):
     """push a index entry from a file to an index"""
     container_name = f"{container}:{version}"
     registry = GlociRegistry(
@@ -108,7 +99,7 @@ def update_index(container, version, manifest_file, arch, cname, insecure):
         token=os.getenv("GLOCI_REGISTRY_TOKEN"),
         insecure=insecure,
     )
-    registry.update_index_entries(arch, cname, manifest_file, version)
+    registry.update_index_entries(manifest_file, version)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ import sys
 import tarfile
 import uuid
 from enum import Enum, auto
+from platform import architecture
 from typing import Optional, Tuple
 
 import jsonschema
@@ -527,10 +528,12 @@ class GlociRegistry(Registry):
 
         return local_digest
 
-    def update_index_entries(self, architecture, cname, manifest_file, version):
+    def update_index_entries(self, manifest_file, version):
         manifest_index_metadata = json.loads(open(manifest_file, "r").read())
+        arch = manifest_index_metadata["annotations"]["architecture"]
+        cname = manifest_index_metadata["annotations"]["cname"]
         old_manifest_meta_data = self.get_manifest_meta_data_by_cname(
-            self.container, cname, version, architecture
+            self.container, cname, version, arch
         )
         if old_manifest_meta_data is not None:
             new_index = self.update_index(
