@@ -2,12 +2,12 @@
 import json
 import os
 
+
 import click
 import oras.client
 import oras.container
-from python_gardenlinux_lib.features import parse_features
-from python_gardenlinux_lib.oras.registry import GlociRegistry
-
+from python_gardenlinux_cli import parse_features
+from registry import GlociRegistry
 
 @click.group()
 @click.option(

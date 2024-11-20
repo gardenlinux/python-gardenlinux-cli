@@ -1,8 +1,6 @@
 from os import walk
 import click
-from python_gardenlinux_lib.apt.package_repo_info import (
-    compare_gardenlinux_repo_version,
-)
+from package_repo_info import compare_gardenlinux_repo_version
 
 
 @click.group()

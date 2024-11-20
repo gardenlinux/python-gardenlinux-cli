@@ -19,29 +19,27 @@ import oras.defaults
 import oras.oci
 import oras.provider
 import oras.utils
-from python_gardenlinux_lib.features.parse_features import (
-    get_oci_metadata_from_fileset,
-)
+from parse_features import get_oci_metadata_from_fileset
 import requests
 from oras.container import Container as OrasContainer
 from oras.decorator import ensure_container
 from oras.provider import Registry
 from oras.schemas import manifest as oras_manifest_schema
 
-from python_gardenlinux_lib.oras.crypto import (
+from crypto import (
     calculate_sha256,
     verify_sha256,
 )
-from python_gardenlinux_lib.oras.defaults import (
+from defaults import (
     annotation_signature_key,
     annotation_signed_string_key,
 )
-from python_gardenlinux_lib.oras.schemas import (
+from schemas import (
     EmptyIndex,
     EmptyManifestMetadata,
     EmptyPlatform,
 )
-from python_gardenlinux_lib.oras.schemas import index as indexSchema
+from schemas import index as indexSchema
 
 
 class ManifestState(Enum):

@@ -1,8 +1,9 @@
 #!/bin/env python3
 
 import click
-
-from python_gardenlinux_cli.commands import oci, ocm, apt
+from ocm import ocm
+from apt import apt
+from oci import oci
 
 
 @click.group()
@@ -13,9 +14,9 @@ def glcli():
     pass
 
 
-glcli.add_command(oci.oci)
-glcli.add_command(ocm.ocm)
-glcli.add_command(apt.apt)
+glcli.add_command(oci)
+glcli.add_command(ocm)
+glcli.add_command(apt)
 
 
 if __name__ == "__main__":
