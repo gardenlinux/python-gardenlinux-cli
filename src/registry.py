@@ -30,17 +30,13 @@ from crypto import (
     calculate_sha256,
     verify_sha256,
 )
-from defaults import (
-    annotation_signature_key,
-    annotation_signed_string_key,
-)
+
 from schemas import (
     EmptyIndex,
     EmptyManifestMetadata,
     EmptyPlatform,
 )
 from schemas import index as indexSchema
-
 
 class ManifestState(Enum):
     Incomplete = auto()
@@ -52,6 +48,8 @@ logger = logging.getLogger(__name__)
 # logging.basicConfig(filename="gl-oci.log", level=logging.DEBUG)
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
+annotation_signature_key = "io.gardenlinux.oci.signature"
+annotation_signed_string_key = "io.gardenlinux.oci.signed-string"
 
 def attach_state(d: dict, state: str):
     d["image_state"] = state
@@ -561,7 +559,7 @@ class GlociRegistry(Registry):
         manifest_image["annotations"]["architecture"] = architecture
         manifest_image["annotations"]["feature_set"] = feature_set
         description = (
-            f"Garden Linux: {cname} "
+            f"Image: {cname} "
             f"Architecture: {architecture} "
             f"Features: {feature_set}"
         )
