@@ -4,10 +4,8 @@ import hashlib
 import json
 import logging
 import os
-import shutil
 import sys
 import tarfile
-import tempfile
 import uuid
 from enum import Enum, auto
 from typing import Optional, Tuple
@@ -19,29 +17,24 @@ import oras.defaults
 import oras.oci
 import oras.provider
 import oras.utils
-from python_gardenlinux_lib.features.parse_features import (
-    get_oci_metadata_from_fileset,
-)
+from parse_features import get_oci_metadata_from_fileset
 import requests
 from oras.container import Container as OrasContainer
 from oras.decorator import ensure_container
 from oras.provider import Registry
 from oras.schemas import manifest as oras_manifest_schema
 
-from python_gardenlinux_lib.oras.crypto import (
+from crypto import (
     calculate_sha256,
     verify_sha256,
 )
-from python_gardenlinux_lib.oras.defaults import (
-    annotation_signature_key,
-    annotation_signed_string_key,
-)
-from python_gardenlinux_lib.oras.schemas import (
+
+from schemas import (
     EmptyIndex,
     EmptyManifestMetadata,
     EmptyPlatform,
 )
-from python_gardenlinux_lib.oras.schemas import index as indexSchema
+from schemas import index as indexSchema
 
 
 class ManifestState(Enum):
@@ -51,8 +44,10 @@ class ManifestState(Enum):
 
 
 logger = logging.getLogger(__name__)
-# logging.basicConfig(filename="gl-oci.log", level=logging.DEBUG)
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
+annotation_signature_key = "io.gardenlinux.oci.signature"
+annotation_signed_string_key = "io.gardenlinux.oci.signed-string"
 
 
 def attach_state(d: dict, state: str):
@@ -135,7 +130,7 @@ class GlociRegistry(Registry):
     def __init__(
         self,
         container_name: str,
-        insecure: bool = False,
+        insecure: bool = True,  # somehow needed, according to logs it is still pushed with https
         token: Optional[str] = None,
         config_path: Optional[str] = None,
     ):
@@ -373,90 +368,6 @@ class GlociRegistry(Registry):
 
         print(f"Successfully attached {file_path} to {manifest_container}")
 
-    def sign_manifest_entry(
-        self, new_manifest_metadata: dict, version: str, architecture: str, cname: str
-    ):
-        data_to_sign = construct_manifest_entry_signed_data_string(
-            cname, version, new_manifest_metadata, architecture
-        )
-        signature = self.signer.sign_data(data_to_sign)
-        new_manifest_metadata["annotations"].update(
-            {
-                annotation_signature_key: signature,
-                annotation_signed_string_key: data_to_sign,
-            }
-        )
-
-    def sign_layer(
-        self,
-        layer: dict,
-        cname: str,
-        version: str,
-        architecture: str,
-        checksum_sha256: str,
-        media_type: str,
-    ):
-        data_to_sign = construct_layer_signed_data_string(
-            cname, version, architecture, media_type, checksum_sha256
-        )
-        signature = self.signer.sign_data(data_to_sign)
-        layer["annotations"].update(
-            {
-                annotation_signature_key: signature,
-                annotation_signed_string_key: data_to_sign,
-            }
-        )
-
-    def verify_manifest_meta_signature(self, manifest_meta: dict):
-        if "annotations" not in manifest_meta:
-            raise ValueError("manifest does not contain annotations")
-        if annotation_signature_key not in manifest_meta["annotations"]:
-            raise ValueError("manifest is not signed")
-        if annotation_signed_string_key not in manifest_meta["annotations"]:
-            raise ValueError("manifest is not signed")
-        signature = manifest_meta["annotations"][annotation_signature_key]
-        signed_data = manifest_meta["annotations"][annotation_signed_string_key]
-        cname = manifest_meta["annotations"]["cname"]
-        version = manifest_meta["platform"]["os.version"]
-        architecture = manifest_meta["annotations"]["architecture"]
-        signed_data_expected = construct_manifest_entry_signed_data_string(
-            cname, version, manifest_meta, architecture
-        )
-        if signed_data_expected != signed_data:
-            raise ValueError(
-                f"Signed data does not match expected signed data.\n{signed_data} != {signed_data_expected}"
-            )
-        self.signer.verify_signature(signed_data, signature)
-
-    def verify_manifest_signature(self, manifest: dict):
-        if "layers" not in manifest:
-            raise ValueError("manifest does not contain layers")
-        if "annotations" not in manifest:
-            raise ValueError("manifest does not contain annotations")
-
-        cname = manifest["annotations"]["cname"]
-        version = manifest["annotations"]["version"]
-        architecture = manifest["annotations"]["architecture"]
-        for layer in manifest["layers"]:
-            if "annotations" not in layer:
-                raise ValueError(f"layer does not contain annotations. layer: {layer}")
-            if annotation_signature_key not in layer["annotations"]:
-                raise ValueError(f"layer is not signed. layer: {layer}")
-            if annotation_signed_string_key not in layer["annotations"]:
-                raise ValueError(f"layer is not signed. layer: {layer}")
-            media_type = layer["mediaType"]
-            checksum_sha256 = layer["digest"].removeprefix("sha256:")
-            signature = layer["annotations"][annotation_signature_key]
-            signed_data = layer["annotations"][annotation_signed_string_key]
-            signed_data_expected = construct_layer_signed_data_string(
-                cname, version, architecture, media_type, checksum_sha256
-            )
-            if signed_data_expected != signed_data:
-                raise ValueError(
-                    f"Signed data does not match expected signed data. {signed_data} != {signed_data_expected}"
-                )
-            self.signer.verify_signature(signed_data, signature)
-
     @ensure_container
     def remove_container(self, container: OrasContainer):
         self.delete_tag(container.manifest_url())
@@ -507,6 +418,7 @@ class GlociRegistry(Registry):
         build_artifacts_dir: str,
         oci_metadata: list,
         feature_set: str,
+        manifest_file: str,
     ):
         """
         creates and pushes an image manifest
@@ -554,6 +466,7 @@ class GlociRegistry(Registry):
             # Push
             response = self.upload_blob(file_path, self.container, layer)
             self._check_200_response(response)
+            logger.info(f"Pushed {artifact["file_name"]} {layer["digest"]}")
             if cleanup_blob and os.path.exists(file_path):
                 os.remove(file_path)
         # This ends up in the manifest
@@ -563,7 +476,7 @@ class GlociRegistry(Registry):
         manifest_image["annotations"]["architecture"] = architecture
         manifest_image["annotations"]["feature_set"] = feature_set
         description = (
-            f"Garden Linux: {cname} "
+            f"Image: {cname} "
             f"Architecture: {architecture} "
             f"Features: {feature_set}"
         )
@@ -591,6 +504,7 @@ class GlociRegistry(Registry):
         self._check_200_response(
             self.upload_manifest(manifest_image, manifest_container)
         )
+        logger.info(f"Successfully pushed {self.container} {local_digest}")
 
         # This ends up in the index-entry for the manifest
         metadata_annotations = {"cname": cname, "architecture": architecture}
@@ -606,6 +520,15 @@ class GlociRegistry(Registry):
             NewPlatform(architecture, version),
         )
 
+        print(json.dumps(manifest_index_metadata), file=open(manifest_file, "w"))
+        logger.info(f"Index entry written to {manifest_file}")
+
+        # self.update_index_entries(architecture, cname, manifest_index_metadata, version)
+
+        return local_digest
+
+    def update_index_entries(self, architecture, cname, manifest_file, version):
+        manifest_index_metadata = json.loads(open(manifest_file, "r").read())
         old_manifest_meta_data = self.get_manifest_meta_data_by_cname(
             self.container, cname, version, architecture
         )
@@ -613,13 +536,11 @@ class GlociRegistry(Registry):
             new_index = self.update_index(
                 old_manifest_meta_data["digest"], manifest_index_metadata
             )
+            logger.info("Replaced manifest entry")
         else:
             new_index = self.update_index(None, manifest_index_metadata)
-
+            logger.info("Appended manifest entry")
         self._check_200_response(self.upload_index(new_index))
-
-        print(f"Successfully pushed {self.container}")
-        return local_digest
 
     def create_layer(
         self,
@@ -636,60 +557,35 @@ class GlociRegistry(Registry):
         }
         return layer
 
-    def push_from_tar(self, architecture: str, version: str, cname: str, tar: str):
-        tmpdir = tempfile.mkdtemp()
-        extract_tar(tar, tmpdir)
-
-        try:
-            oci_metadata = get_oci_metadata_from_fileset(
-                os.listdir(tmpdir), architecture
-            )
-
-            features = ""
-            for artifact in oci_metadata:
-                if artifact["media_type"] == "application/io.gardenlinux.release":
-                    file = open(f"{tmpdir}/{artifact["file_name"]}", "r")
-                    lines = file.readlines()
-                    for line in lines:
-                        if line.strip().startswith("GARDENLINUX_FEATURES="):
-                            features = line.strip().removeprefix(
-                                "GARDENLINUX_FEATURES="
-                            )
-                            break
-                    file.close()
-
-            digest = self.push_image_manifest(
-                architecture, cname, version, tmpdir, oci_metadata, features
-            )
-        except Exception as e:
-            print("Error: ", e)
-            shutil.rmtree(tmpdir, ignore_errors=True)
-            print("removed tmp files.")
-            exit(1)
-        shutil.rmtree(tmpdir, ignore_errors=True)
-        print("removed tmp files.")
-        return digest
-
-    def push_from_dir(self, architecture: str, version: str, cname: str, dir: str):
+    def push_from_dir(
+        self,
+        architecture: str,
+        version: str,
+        cname: str,
+        directory: str,
+        manifest_file: str,
+    ):
         # Step 1 scan and extract nested artifacts:
-        for file in os.listdir(dir):
+        for file in os.listdir(directory):
             try:
                 if file.endswith(".pxe.tar.gz"):
                     logger.info(f"Found nested artifact {file}")
-                    nested_tar_obj = tarfile.open(f"{dir}/{file}")
-                    nested_tar_obj.extractall(filter="data", path=dir)
+                    nested_tar_obj = tarfile.open(f"{directory}/{file}")
+                    nested_tar_obj.extractall(filter="data", path=directory)
                     nested_tar_obj.close()
             except (OSError, tarfile.FilterError, tarfile.TarError) as e:
                 print(f"Failed to extract nested artifact {file}", e)
                 exit(1)
 
         try:
-            oci_metadata = get_oci_metadata_from_fileset(os.listdir(dir), architecture)
+            oci_metadata = get_oci_metadata_from_fileset(
+                os.listdir(directory), architecture
+            )
 
             features = ""
             for artifact in oci_metadata:
                 if artifact["media_type"] == "application/io.gardenlinux.release":
-                    file = open(f"{dir}/{artifact["file_name"]}", "r")
+                    file = open(f"{directory}/{artifact["file_name"]}", "r")
                     lines = file.readlines()
                     for line in lines:
                         if line.strip().startswith("GARDENLINUX_FEATURES="):
@@ -700,33 +596,15 @@ class GlociRegistry(Registry):
                     file.close()
 
             digest = self.push_image_manifest(
-                architecture, cname, version, dir, oci_metadata, features
+                architecture,
+                cname,
+                version,
+                directory,
+                oci_metadata,
+                features,
+                manifest_file,
             )
         except Exception as e:
             print("Error: ", e)
             exit(1)
         return digest
-
-
-def extract_tar(tar: str, tmpdir: str):
-    """
-    Extracts the contents of the tarball to the specified tmp directory. In case
-    a nested artifact is found (.pxe.tar.gz) its contents are extracted as well
-    :param tar: str the full path to the tarball
-    :param tmpdir: str the tmp directory to extract to
-    """
-    try:
-        tar_obj = tarfile.open(tar)
-        tar_obj.extractall(filter="data", path=tmpdir)
-        tar_obj.close()
-        for file in os.listdir(tmpdir):
-            if file.endswith(".pxe.tar.gz"):
-                logger.info(f"Found nested artifact {file}")
-                nested_tar_obj = tarfile.open(f"{tmpdir}/{file}")
-                nested_tar_obj.extractall(filter="data", path=tmpdir)
-                nested_tar_obj.close()
-
-    except (OSError, tarfile.FilterError, tarfile.TarError) as e:
-        print("Failed to extract tarball", e)
-        shutil.rmtree(tmpdir, ignore_errors=True)
-        exit(1)
