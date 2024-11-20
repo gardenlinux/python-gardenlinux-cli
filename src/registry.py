@@ -634,40 +634,6 @@ class GlociRegistry(Registry):
         }
         return layer
 
-    def push_from_tar(self, architecture: str, version: str, cname: str, tar: str):
-        tmpdir = tempfile.mkdtemp()
-        extract_tar(tar, tmpdir)
-
-        try:
-            oci_metadata = get_oci_metadata_from_fileset(
-                os.listdir(tmpdir), architecture
-            )
-
-            features = ""
-            for artifact in oci_metadata:
-                if artifact["media_type"] == "application/io.gardenlinux.release":
-                    file = open(f"{tmpdir}/{artifact["file_name"]}", "r")
-                    lines = file.readlines()
-                    for line in lines:
-                        if line.strip().startswith("GARDENLINUX_FEATURES="):
-                            features = line.strip().removeprefix(
-                                "GARDENLINUX_FEATURES="
-                            )
-                            break
-                    file.close()
-
-            digest = self.push_image_manifest(
-                architecture, cname, version, tmpdir, oci_metadata, features
-            )
-        except Exception as e:
-            print("Error: ", e)
-            shutil.rmtree(tmpdir, ignore_errors=True)
-            print("removed tmp files.")
-            exit(1)
-        shutil.rmtree(tmpdir, ignore_errors=True)
-        print("removed tmp files.")
-        return digest
-
     def push_from_dir(self, architecture: str, version: str, cname: str, dir: str):
         # Step 1 scan and extract nested artifacts:
         for file in os.listdir(dir):
