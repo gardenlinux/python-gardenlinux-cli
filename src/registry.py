@@ -36,6 +36,7 @@ from schemas import (
 )
 from schemas import index as indexSchema
 
+
 class ManifestState(Enum):
     Incomplete = auto()
     Complete = auto()
@@ -47,6 +48,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 annotation_signature_key = "io.gardenlinux.oci.signature"
 annotation_signed_string_key = "io.gardenlinux.oci.signed-string"
+
 
 def attach_state(d: dict, state: str):
     d["image_state"] = state
@@ -128,7 +130,7 @@ class GlociRegistry(Registry):
     def __init__(
         self,
         container_name: str,
-        insecure: bool = True, # somehow needed, according to logs it is still pushed with https
+        insecure: bool = True,  # somehow needed, according to logs it is still pushed with https
         token: Optional[str] = None,
         config_path: Optional[str] = None,
     ):
@@ -521,7 +523,7 @@ class GlociRegistry(Registry):
         print(json.dumps(manifest_index_metadata), file=open(manifest_file, "w"))
         logger.info(f"Index entry written to {manifest_file}")
 
-        #self.update_index_entries(architecture, cname, manifest_index_metadata, version)
+        # self.update_index_entries(architecture, cname, manifest_index_metadata, version)
 
         return local_digest
 
@@ -555,7 +557,14 @@ class GlociRegistry(Registry):
         }
         return layer
 
-    def push_from_dir(self, architecture: str, version: str, cname: str, directory: str, manifest_file: str):
+    def push_from_dir(
+        self,
+        architecture: str,
+        version: str,
+        cname: str,
+        directory: str,
+        manifest_file: str,
+    ):
         # Step 1 scan and extract nested artifacts:
         for file in os.listdir(directory):
             try:
@@ -569,7 +578,9 @@ class GlociRegistry(Registry):
                 exit(1)
 
         try:
-            oci_metadata = get_oci_metadata_from_fileset(os.listdir(directory), architecture)
+            oci_metadata = get_oci_metadata_from_fileset(
+                os.listdir(directory), architecture
+            )
 
             features = ""
             for artifact in oci_metadata:
@@ -585,7 +596,13 @@ class GlociRegistry(Registry):
                     file.close()
 
             digest = self.push_image_manifest(
-                architecture, cname, version, directory, oci_metadata, features, manifest_file
+                architecture,
+                cname,
+                version,
+                directory,
+                oci_metadata,
+                features,
+                manifest_file,
             )
         except Exception as e:
             print("Error: ", e)
