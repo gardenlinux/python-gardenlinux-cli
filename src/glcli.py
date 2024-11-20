@@ -46,14 +46,20 @@ def cli():
     default="manifest-entry.json",
     help="A file where the index entry for the pushed manifest is written to.",
 )
+@click.option(
+    "--insecure",
+    default=False,
+    help="Use HTTP to communicate with the registry",
+)
 def push_manifest(
-    container, version, arch, cname, directory, cosign_file, manifest_file
+    container, version, arch, cname, directory, cosign_file, manifest_file, insecure
 ):
     """push artifacts from a dir to a registry, get the index-entry for the manifest in return"""
     container_name = f"{container}:{version}"
     registry = GlociRegistry(
         container_name=container_name,
         token=os.getenv("GLOCI_REGISTRY_TOKEN"),
+        insecure=insecure,
     )
     digest = registry.push_from_dir(arch, version, cname, directory, manifest_file)
     if cosign_file:
@@ -89,12 +95,18 @@ def push_manifest(
 @click.option(
     "--cname", required=True, type=click.Path(), help="Canonical Name of Image"
 )
-def update_index(container, version, manifest_file, arch, cname):
+@click.option(
+    "--insecure",
+    default=False,
+    help="Use HTTP to communicate with the registry",
+)
+def update_index(container, version, manifest_file, arch, cname, insecure):
     """push a index entry from a file to an index"""
     container_name = f"{container}:{version}"
     registry = GlociRegistry(
         container_name=container_name,
         token=os.getenv("GLOCI_REGISTRY_TOKEN"),
+        insecure=insecure,
     )
     registry.update_index_entries(arch, cname, manifest_file, version)
 
