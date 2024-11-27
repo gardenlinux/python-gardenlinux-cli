@@ -48,7 +48,7 @@ def test_push_manifest(version, arch, cname):
             "--insecure",
             "True",
             "--cosign_file",
-            "digest"
+            "digest",
         ],
         catch_exceptions=False,
     )
