@@ -38,15 +38,17 @@ def test_push_manifest(version, arch, cname):
             "--container",
             CONTAINER_NAME_ZOT_EXAMPLE,
             "--version",
-            version,  # 1702.0
+            version,
             "--arch",
-            arch,  # amd64
+            arch,
             "--cname",
-            cname,  # metal-gardener_prod
+            cname,
             "--dir",
             GARDENLINUX_ROOT_DIR_EXAMPLE,
             "--insecure",
             "True",
+            "--cosign_file",
+            "digest"
         ],
         catch_exceptions=False,
     )
