@@ -1,0 +1,21 @@
+{
+    "distSpecVersion": "1.1.0",
+    "storage": {
+        "rootDirectory": "output/registry/zot"
+    },
+    "http": {
+        "address": "localhost",
+        "port": "8080"
+    },
+    "log": {
+        "level": "warn"
+    },
+    "extensions": {
+        "search": {
+            "enable": true
+        },
+        "ui": {
+            "enable": true
+        }
+    }
+}

@@ -1,12 +1,15 @@
 import pytest
 from click.testing import CliRunner
 import sys
+
 sys.path.append("src")
+
 from glcli import cli
 
-CONTAINER_NAME_ZOT_EXAMPLE = "127.0.0.1:18081/gardenlinux-example"
-#GARDENLINUX_ROOT_DIR_EXAMPLE = "test-data/build-metal-gardener_prod"
-TEST_DATA_DIR = ""
+
+CONTAINER_NAME_ZOT_EXAMPLE = "localhost:5000/gardenlinux"
+GARDENLINUX_ROOT_DIR_EXAMPLE = "tests/data/gardenlinux/.build"
+
 
 @pytest.mark.usefixtures("zot_session")
 @pytest.mark.parametrize(
@@ -26,8 +29,6 @@ TEST_DATA_DIR = ""
         ("today", "metal-kvm_dev", "amd64"),
     ],
 )
-
-
 def test_push_manifest(version, arch, cname):
     runner = CliRunner()
     result = runner.invoke(
@@ -37,13 +38,15 @@ def test_push_manifest(version, arch, cname):
             "--container",
             CONTAINER_NAME_ZOT_EXAMPLE,
             "--version",
-            "1702.0",
+            version,  # 1702.0
             "--arch",
-            "amd64",
+            arch,  # amd64
             "--cname",
-            "metal-gardener_prod",
+            cname,  # metal-gardener_prod
             "--dir",
-            #GARDENLINUX_ROOT_DIR_EXAMPLE
+            GARDENLINUX_ROOT_DIR_EXAMPLE,
+            "--insecure",
+            "True",
         ],
         catch_exceptions=False,
     )

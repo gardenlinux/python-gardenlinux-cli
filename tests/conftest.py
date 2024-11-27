@@ -8,29 +8,15 @@ import pytest
 from dotenv import load_dotenv
 
 
-def write_zot_config(config_dict, file_path):
-    with open(file_path, "w") as config_file:
-        json.dump(config_dict, config_file, indent=4)
-
-
 @pytest.fixture(autouse=False, scope="function")
 def zot_session():
     load_dotenv()
     print("start zot session")
-    zot_config = {
-        "distSpecVersion": "1.1.0",
-        "storage": {"rootDirectory": "output/registry/zot"},
-        "http": {"address": "127.0.0.1", "port": "18081"},
-        "log": {"level": "warn"},
-    }
+    zot_config = json.load(open("tests/zot/config.json"))
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp_config_file:
-        write_zot_config(zot_config, temp_config_file.name)
-        zot_config_file_path = temp_config_file.name
-
-    print(f"Spawning zot registry with config {zot_config_file_path}")
+    print(f"Spawning zot registry with config {zot_config}")
     zot_process = spawn_background_process(
-        f"zot serve {zot_config_file_path}",
+        f"zot serve {zot_config}",
         stdout=sys.stdout,
         stderr=sys.stderr,
     )
@@ -42,19 +28,17 @@ def zot_session():
 
     if os.path.isdir("./output"):
         shutil.rmtree("./output")
-    if os.path.isfile(zot_config_file_path):
-        os.remove(zot_config_file_path)
 
 
 def pytest_sessionstart(session):
-    #call_command("./cert/gencert.sh")
-    print("pytest session started")
-    #call_command("./test-data/build-test-data.sh --dummy")
+    # call_command("./cert/gencert.sh")
+    print(" pytest session started")
+    call_command("./tests/data/build-test-data.sh --dummy")
 
 
 def pytest_sessionfinish(session):
-    print("pytest session finished")
-    #if os.path.isfile("./cert/oci-sign.crt"):
+    print(" pytest session finished")
+    # if os.path.isfile("./cert/oci-sign.crt"):
     #    os.remove("./cert/oci-sign.crt")
-    #if os.path.isfile("./cert/oci-sign.key"):
+    # if os.path.isfile("./cert/oci-sign.key"):
     #    os.remove("./cert/oci-sign.key")
