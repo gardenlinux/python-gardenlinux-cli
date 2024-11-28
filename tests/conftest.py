@@ -2,7 +2,6 @@ from helper import call_command, spawn_background_process
 import os
 import sys
 import shutil
-import json
 import pytest
 
 
