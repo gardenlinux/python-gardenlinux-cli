@@ -9,8 +9,7 @@ import pytest
 @pytest.fixture(autouse=False, scope="function")
 def zot_session():
     print("Starting zot session")
-    zot_config = json.load(open("tests/zot/config.json"))
-
+    zot_config = "tests/zot/config.json"
     print(f"Spawning zot registry with config {zot_config}")
     zot_process = spawn_background_process(
         f"zot serve {zot_config}",
