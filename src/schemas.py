@@ -49,7 +49,6 @@ EmptyManifestMetadata = {
     "digest": "",
     "size": 0,
     "annotations": {},
-    "artifactType": "",
 }
 
 EmptyIndex = {

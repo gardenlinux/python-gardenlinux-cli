@@ -51,10 +51,6 @@ annotation_signature_key = "io.gardenlinux.oci.signature"
 annotation_signed_string_key = "io.gardenlinux.oci.signed-string"
 
 
-def attach_state(d: dict, state: str):
-    d["image_state"] = state
-
-
 def get_image_state(manifest: dict) -> str:
     if "annotations" not in manifest:
         logger.warning("No annotations set for manifest.")
@@ -81,7 +77,6 @@ def NewManifestMetadata(
     manifest_meta_data["size"] = size
     manifest_meta_data["annotations"] = annotations
     manifest_meta_data["platform"] = platform_data
-    manifest_meta_data["artifactType"] = ""
     return manifest_meta_data
 
 
@@ -328,7 +323,6 @@ class GlociRegistry(Registry):
         if "annotations" not in manifest:
             logger.warning("No annotations found in manifest, init annotations now.")
             manifest["annotations"] = {}
-        attach_state(manifest["annotations"], new_state)
 
     def attach_layer(
         self,
@@ -484,7 +478,6 @@ class GlociRegistry(Registry):
         manifest_image["annotations"][
             "org.opencontainers.image.description"
         ] = description
-        attach_state(manifest_image["annotations"], "")
 
         config_annotations = {"cname": cname, "architecture": architecture}
         conf, config_file = create_config_from_dict(dict(), config_annotations)
@@ -509,7 +502,6 @@ class GlociRegistry(Registry):
 
         # This ends up in the index-entry for the manifest
         metadata_annotations = {"cname": cname, "architecture": architecture}
-        attach_state(metadata_annotations, "")
         metadata_annotations["feature_set"] = feature_set
         manifest_digest = self.get_digest(manifest_container)
         if manifest_digest != local_digest:
