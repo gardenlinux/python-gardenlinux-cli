@@ -43,7 +43,7 @@ def cli():
 )
 @click.option(
     "--manifest_file",
-    default="manifest-entry.json",
+    default="manifests/manifest.json",
     help="A file where the index entry for the pushed manifest is written to.",
 )
 @click.option(
@@ -82,24 +82,24 @@ def push_manifest(
     help="Version of image",
 )
 @click.option(
-    "--manifest_file",
-    default="manifest-entry.json",
-    help="A file where the index entry is read from.",
+    "--manifest_folder",
+    default="manifests",
+    help="A folder where the index entries are read from.",
 )
 @click.option(
     "--insecure",
     default=False,
     help="Use HTTP to communicate with the registry",
 )
-def update_index(container, version, manifest_file, insecure):
-    """push a index entry from a file to an index"""
+def update_index(container, version, manifest_folder, insecure):
+    """push a index entry from a list of files to an index"""
     container_name = f"{container}:{version}"
     registry = GlociRegistry(
         container_name=container_name,
         token=os.getenv("GLOCI_REGISTRY_TOKEN"),
         insecure=insecure,
     )
-    registry.update_index_entries(manifest_file, version)
+    registry.update_index(manifest_folder)
 
 
 if __name__ == "__main__":
