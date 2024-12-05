@@ -290,7 +290,6 @@ class GlociRegistry(Registry):
             container, manifest_digest, allowed_media_type=allowed_media_type
         )
 
-
     def change_state(self, cname: str, version: str, architecture: str, new_state: str):
         manifest_container = OrasContainer(
             f"{self.container_name}-{cname}-{architecture}"
@@ -302,7 +301,6 @@ class GlociRegistry(Registry):
         if "annotations" not in manifest:
             logger.warning("No annotations found in manifest, init annotations now.")
             manifest["annotations"] = {}
-
 
     @ensure_container
     def remove_container(self, container: OrasContainer):
@@ -464,7 +462,9 @@ class GlociRegistry(Registry):
         new_entries = 0
 
         for file in os.listdir(manifest_folder):
-            manifest_metadata = json.loads(open(manifest_folder + "/" + file, "r").read())
+            manifest_metadata = json.loads(
+                open(manifest_folder + "/" + file, "r").read()
+            )
             # Skip if manifest with same digest already exists
             found = False
             for entry in index["manifests"]:
@@ -472,11 +472,15 @@ class GlociRegistry(Registry):
                     found = True
                     break
             if found:
-                logger.info(f"Skipping manifest with digest {manifest_metadata["digest"]} - already exists")
+                logger.info(
+                    f"Skipping manifest with digest {manifest_metadata["digest"]} - already exists"
+                )
                 continue
             index["manifests"].append(manifest_metadata)
-            logger.info(f"Index appended locally {manifest_metadata["annotations"]["cname"]}")
-            new_entries+=1
+            logger.info(
+                f"Index appended locally {manifest_metadata["annotations"]["cname"]}"
+            )
+            new_entries += 1
 
         self._check_200_response(self.upload_index(index))
         logger.info(f"Index pushed with {new_entries} new entries")

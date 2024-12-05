@@ -29,6 +29,7 @@ def pytest_sessionstart(session):
     call_command("./tests/cert/gencert.sh")
     print("pytest session started")
     call_command("./tests/data/build-test-data.sh --dummy")
+    call_command("mkdir -p manifests")
 
 
 def pytest_sessionfinish(session):
@@ -37,3 +38,5 @@ def pytest_sessionfinish(session):
         os.remove("./tests/cert/oci-sign.crt")
     if os.path.isfile("./tests/cert/oci-sign.key"):
         os.remove("./tests/cert/oci-sign.key")
+    if os.path.isdir("./manifests"):
+        shutil.rmtree("./manifests")

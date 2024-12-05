@@ -41,6 +41,8 @@ def test_push_manifest_and_index(version, arch, cname):
             "True",
             "--cosign_file",
             "digest",
+            "--manifest_file",
+            "manifests/manifest.json",
         ],
         catch_exceptions=False,
     )
@@ -67,8 +69,8 @@ def test_push_manifest_and_index(version, arch, cname):
             version,
             "--insecure",
             "True",
-            "--manifest_file",
-            "manifest-entry.json",
+            "--manifest_folder",
+            "manifests",
         ],
         catch_exceptions=False,
     )
