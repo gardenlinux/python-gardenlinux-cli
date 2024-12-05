@@ -196,7 +196,7 @@ class GlociRegistry(Registry):
             return index
 
         except ValueError:
-            logger.debug("Index not found, creating new Index!")
+            logger.info("Index not found, creating new Index!")
             return NewIndex()
 
     @ensure_container
@@ -290,27 +290,6 @@ class GlociRegistry(Registry):
             container, manifest_digest, allowed_media_type=allowed_media_type
         )
 
-    def update_index(self, old_digest: Optional[str], manifest_meta_data: dict):
-        """
-        replaces an old manifest entry with a new manifest entry
-        """
-        index = self.get_index()
-
-        if "manifests" not in index:
-            logger.debug("Index is empty")
-        updated = False
-        if old_digest is not None:
-            for i, manifest in enumerate(index["manifests"]):
-                if manifest["digest"] == old_digest:
-                    logger.debug("Found old manifest entry")
-                    index["manifests"][i] = manifest_meta_data
-                    updated = True
-                    break
-        if not updated:
-            logger.debug("Did NOT find old manifest entry")
-            index["manifests"].append(manifest_meta_data)
-
-        return index
 
     def change_state(self, cname: str, version: str, architecture: str, new_state: str):
         manifest_container = OrasContainer(
@@ -324,44 +303,6 @@ class GlociRegistry(Registry):
             logger.warning("No annotations found in manifest, init annotations now.")
             manifest["annotations"] = {}
 
-    def attach_layer(
-        self,
-        cname: str,
-        version: str,
-        architecture: str,
-        file_path: str,
-        media_type: str,
-    ):
-        if not os.path.exists(file_path):
-            exit(f"{file_path} does not exist.")
-
-        manifest_container = OrasContainer(
-            f"{self.container_name}-{cname}-{architecture}"
-        )
-
-        manifest = self.get_manifest_by_cname(
-            self.container, cname, version, architecture
-        )
-
-        layer = self.create_layer(file_path, cname, version, architecture, media_type)
-        self._check_200_response(self.upload_blob(file_path, self.container, layer))
-
-        manifest["layers"].append(layer)
-
-        old_manifest_digest = self.get_digest(manifest_container)
-        self._check_200_response(self.upload_manifest(manifest, manifest_container))
-
-        new_manifest_metadata = self.get_manifest_meta_data_by_cname(
-            self.container, cname, version, architecture
-        )
-        new_manifest_metadata["digest"] = self.get_digest(manifest_container)
-        new_manifest_metadata["size"] = self.get_manifest_size(manifest_container)
-        new_manifest_metadata["platform"] = NewPlatform(architecture, version)
-
-        new_index = self.update_index(old_manifest_digest, new_manifest_metadata)
-        self._check_200_response(self.upload_index(new_index))
-
-        print(f"Successfully attached {file_path} to {manifest_container}")
 
     @ensure_container
     def remove_container(self, container: OrasContainer):
@@ -516,26 +457,29 @@ class GlociRegistry(Registry):
         print(json.dumps(manifest_index_metadata), file=open(manifest_file, "w"))
         logger.info(f"Index entry written to {manifest_file}")
 
-        # self.update_index_entries(architecture, cname, manifest_index_metadata, version)
-
         return local_digest
 
-    def update_index_entries(self, manifest_file, version):
-        manifest_index_metadata = json.loads(open(manifest_file, "r").read())
-        arch = manifest_index_metadata["annotations"]["architecture"]
-        cname = manifest_index_metadata["annotations"]["cname"]
-        old_manifest_meta_data = self.get_manifest_meta_data_by_cname(
-            self.container, cname, version, arch
-        )
-        if old_manifest_meta_data is not None:
-            new_index = self.update_index(
-                old_manifest_meta_data["digest"], manifest_index_metadata
-            )
-            logger.info("Replaced manifest entry")
-        else:
-            new_index = self.update_index(None, manifest_index_metadata)
-            logger.info("Appended manifest entry")
-        self._check_200_response(self.upload_index(new_index))
+    def update_index(self, manifest_folder):
+        index = self.get_index()
+        new_entries = 0
+
+        for file in os.listdir(manifest_folder):
+            manifest_metadata = json.loads(open(manifest_folder + "/" + file, "r").read())
+            # Skip if manifest with same digest already exists
+            found = False
+            for entry in index["manifests"]:
+                if entry["digest"] == manifest_metadata["digest"]:
+                    found = True
+                    break
+            if found:
+                logger.info(f"Skipping manifest with digest {manifest_metadata["digest"]} - already exists")
+                continue
+            index["manifests"].append(manifest_metadata)
+            logger.info(f"Index appended locally {manifest_metadata["annotations"]["cname"]}")
+            new_entries+=1
+
+        self._check_200_response(self.upload_index(index))
+        logger.info(f"Index pushed with {new_entries} new entries")
 
     def create_layer(
         self,
