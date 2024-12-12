@@ -81,7 +81,9 @@ def NewManifestMetadata(
 
 
 def NewIndex() -> dict:
-    return copy.deepcopy(EmptyIndex)
+    index = copy.deepcopy(EmptyIndex)
+    index["mediaType"] = "application/vnd.oci.image.index.v1+json"
+    return index
 
 
 def create_config_from_dict(conf: dict, annotations: dict) -> Tuple[dict, str]:
