@@ -195,6 +195,8 @@ class GlociRegistry(Registry):
         try:
             self._check_200_response(response)
             index = response.json()
+            # Ensure mediaType is set for existing indices
+            index["mediaType"] = "application/vnd.oci.image.index.v1+json"
             return index
 
         except ValueError:
