@@ -33,6 +33,7 @@ index = {
     "required": [
         "schemaVersion",
         "manifests",
+        "mediaType",
     ],
     "properties": indexProperties,
     "additionalProperties": True,
