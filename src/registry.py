@@ -195,8 +195,6 @@ class GlociRegistry(Registry):
         try:
             self._check_200_response(response)
             index = response.json()
-            # Ensure mediaType is set for existing indices
-            index["mediaType"] = "application/vnd.oci.image.index.v1+json"
             return index
 
         except ValueError:
@@ -463,6 +461,10 @@ class GlociRegistry(Registry):
 
     def update_index(self, manifest_folder):
         index = self.get_index()
+        # Ensure mediaType is set for existing indices
+        if "mediaType" not in index:
+            index["mediaType"] = "application/vnd.oci.image.index.v1+json"
+
         new_entries = 0
 
         for file in os.listdir(manifest_folder):
