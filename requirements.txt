@@ -14,7 +14,7 @@ imagesize==1.4.1
 iniconfig==2.0.0
 Jinja2==3.1.4
 jsonschema==4.23.0
-jsonschema-specifications==2024.10.1
+jsonschema-specifications==2025.9.1
 MarkupSafe==3.0.2
 networkx==3.4.2
 oras @ git+https://github.com/oras-project/oras-py.git@caf8db5b279382335fbb1f6d7402ed9b73618d37
